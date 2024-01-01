@@ -1,5 +1,6 @@
 const catchAsyncError = require("../middleware/catchAsyncError");
 const Community = require('../models/communityModel');
+const Member = require("../models/memberModel");
 
 exports.createCommunity = catchAsyncError(async (req, res, next) => {
     const { name } = req.body;
@@ -25,7 +26,7 @@ exports.createCommunity = catchAsyncError(async (req, res, next) => {
 
 exports.getAllCommunities = catchAsyncError(async (req, res, next) => {
     const documents = 50
-    const page = 1;
+    const page = parseInt(req.query.page) || 1;;
     const skip = documents * (page - 1);
     const total = await Community.countDocuments();
     const community = await Community
@@ -54,15 +55,28 @@ exports.getAllCommunities = catchAsyncError(async (req, res, next) => {
 });
 
 exports.getAllCommunityMembers = catchAsyncError(async (req, res, next) => {
-
+    const perPage = 10;
+    const page = parseInt(req.query.page) || 1;
     const communityId = req.params.id;
-    const community = await Community.findById(communityId).populate('members');
+    const total = await Member.countDocuments({ community: communityId });
+    const pages = Math.ceil(total / perPage);
+    const communityMemberData = await Member.find({ community: communityId })
+        .populate({ path: 'user', select: 'id name', })
+        .populate({ path: 'role', select: 'id name' })
+        .skip((page - 1) * perPage)
+        .limit(perPage);
 
-    if (!community) {
-        return  next(new ErrorHandler("Community not found", 404));
-    }
-
-    res.json({ members: community.members });
+    res.json({
+        status: true,
+        content: {
+            meta: {
+                total,
+                pages,
+                page
+            },
+            data: communityMemberData
+        }
+    });
 
 });
 
@@ -76,17 +90,46 @@ exports.getMyOwnedCommunity = catchAsyncError(async (req, res, next) => {
     const totalPages = Math.ceil(totalCommunities / perPage);
 
     const communities = await Community.find({ owner: ownerId })
-      .skip((page - 1) * perPage)
-      .limit(perPage);
+        .skip((page - 1) * perPage)
+        .limit(perPage);
 
     res.json({
-      meta: {
-        total: totalCommunities,
-        pages: totalPages,
-        page: page,
-      },
-      communities: communities,
+        status: true,
+        content: {
+            meta: {
+                total: totalCommunities,
+                pages: totalPages,
+                page
+            },
+            data: communities
+        }
     });
 
 });
 
+
+exports.getMyJoinCommunity = catchAsyncError(async (req, res, next) => {
+    const perPage = 10;
+    const page = parseInt(req.query.page) || 1;
+    const communityId = req.user.id;
+    const total = await Member.countDocuments({ user: communityId });
+    const pages = Math.ceil(total / perPage);
+    const communityMemberData = await Member.find({ user: communityId })
+        .populate({ path: 'user', select: 'id name', })
+        .populate({ path: 'role', select: 'id name' })
+        .skip((page - 1) * perPage)
+        .limit(perPage);
+
+    res.json({
+        status: true,
+        content: {
+            meta: {
+                total,
+                pages,
+                page
+            },
+            data: communityMemberData
+        }
+    });
+
+});
