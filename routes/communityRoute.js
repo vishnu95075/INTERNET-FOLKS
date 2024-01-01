@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.route("/community").post(isAuthenticatedUser,createCommunity);
 router.route("/community").get(getAllCommunities);
-router.route("/community/:id/members").get(getAllCommunityMembers);
+router.route("/community/:id/members").get(isAuthenticatedUser,getAllCommunityMembers);
 router.route("/community/me/owner").get(isAuthenticatedUser,getMyOwnedCommunity);
 
 module.exports = router

@@ -1,7 +1,6 @@
 const Role = require("../models/roleModel");
 const ErrorHandler = require("../utils/errorhandler");
 const catchAsyncError = require("../middleware/catchAsyncError");
-const ApiFeatures = require("../utils/apifeature");
 
 //Create New Role --> Admin
 exports.createRole = catchAsyncError(async (req, res, next) => {
@@ -25,7 +24,7 @@ exports.getAllRoles = catchAsyncError(async (req, res, next) => {
     const roles = await Role.find().skip(skip).limit(documents)
     const pages = Math.ceil(total/10)
     if (!roles) {
-        return next(new ErrorHandler("Product not found", 404));
+        return next(new ErrorHandler("Role not found", 404));
     }
     res.status(200).json(
         {

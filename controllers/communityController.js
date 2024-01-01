@@ -36,7 +36,7 @@ exports.getAllCommunities = catchAsyncError(async (req, res, next) => {
 
     const pages = Math.ceil(total / 10)
     if (!community) {
-        return next(new ErrorHandler("Product not found", 404));
+        return next(new ErrorHandler("Community not found", 404));
     }
     res.status(200).json(
         {
@@ -59,7 +59,7 @@ exports.getAllCommunityMembers = catchAsyncError(async (req, res, next) => {
     const community = await Community.findById(communityId).populate('members');
 
     if (!community) {
-        return res.status(404).json({ error: 'Community not found' });
+        return  next(new ErrorHandler("Community not found", 404));
     }
 
     res.json({ members: community.members });
